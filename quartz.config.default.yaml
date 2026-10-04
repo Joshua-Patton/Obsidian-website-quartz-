@@ -7,7 +7,7 @@ configuration:
   analytics:
     provider: plausible
   locale: en-US
-  baseUrl: joshua-patton.github.io/Obsidian-website-quartz-/
+  baseUrl: joshua-patton.github.io/Obsidian-website-quartz
   ignorePatterns:
     - private
     - templates
