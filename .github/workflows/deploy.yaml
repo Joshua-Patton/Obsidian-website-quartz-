@@ -19,11 +19,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v6
+      - name: Setup Node
+        uses: actions/setup-node@v6
         with:
           node-version: 24
 
@@ -43,78 +45,194 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-plugins-
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm ci
 
-      # Temporary fix for Quartz v5 folder-note wikilinks.
-      # Fixes links such as [[groups]] when the note is:
-      # Algebra/groups/groups.md
+      - name: Install Quartz plugins
+        run: npx quartz plugin install
+
+      # -------------------------------------------------------
+      # Temporary Quartz v5 fix
+      #
+      # Quartz v5 currently fails to resolve short wikilinks
+      # to Obsidian folder notes.
+      #
+      # Example:
+      #
+      #   [[groups]]
+      #
+      # should resolve to:
+      #
+      #   Algebra/groups/
+      #
+      # when the actual note is:
+      #
+      #   Algebra/groups/groups.md
+      #
+      # Internally Quartz converts that note to:
+      #
+      #   Algebra/groups/index
+      #
+      # The shortest-link resolver in utils 1.0.1 does not
+      # currently check the parent folder name of /index.
+      #
+      # Upstream issue:
+      # quartz-community/utils #4
+      #
+      # Upstream fix:
+      # quartz-community/utils PR #5
+      # -------------------------------------------------------
+
       - name: Patch Quartz folder-note links
         run: |
           node <<'EOF'
           const fs = require("fs");
 
-          const file = "node_modules/@quartz-community/utils/dist/path.js";
-          let s = fs.readFileSync(file, "utf8");
+          const file =
+            "node_modules/@quartz-community/utils/dist/path.js";
 
-          const oldDecl =
+          if (!fs.existsSync(file)) {
+            throw new Error(
+              `Quartz utils file not found: ${file}`
+            );
+          }
+
+          let source = fs.readFileSync(file, "utf8");
+
+          const patchMarker =
+            "QUARTZ_FOLDER_NOTE_SHORTEST_LINK_FIX";
+
+          if (source.includes(patchMarker)) {
+            console.log(
+              "Quartz folder-note patch already present."
+            );
+            process.exit(0);
+          }
+
+          const declaration =
             "const matchingFileNames = opts.allSlugs.filter((slug) => {";
 
-          const newDecl =
-            "let matchingFileNames = opts.allSlugs.filter((slug) => {";
-
-          if (s.includes(oldDecl)) {
-            s = s.replace(oldDecl, newDecl);
+          if (!source.includes(declaration)) {
+            throw new Error(
+              "Could not find matchingFileNames declaration in Quartz utils."
+            );
           }
+
+          source = source.replace(
+            declaration,
+            "let matchingFileNames = opts.allSlugs.filter((slug) => {"
+          );
 
           const marker =
             "if (matchingFileNames.length === 1) {";
 
+          const resolverStart = source.indexOf(
+            "let matchingFileNames = opts.allSlugs.filter((slug) => {"
+          );
+
+          const insertionPoint = source.indexOf(
+            marker,
+            resolverStart
+          );
+
+          if (
+            resolverStart === -1 ||
+            insertionPoint === -1
+          ) {
+            throw new Error(
+              "Could not locate Quartz shortest-link resolver."
+            );
+          }
+
           const patch = `
-          // Fix Quartz v5 short wikilinks to folder notes.
+          // QUARTZ_FOLDER_NOTE_SHORTEST_LINK_FIX
+          //
           // Foo/Foo.md becomes Foo/index internally.
-          // This allows [[Foo]] to find Foo/index.
-          if (matchingFileNames.length === 0 && !isMultiSegment) {
-            matchingFileNames = opts.allSlugs.filter((slug) => {
-              const parts = slug.split("/");
-              return (
-                parts.at(-1) === "index" &&
-                parts.at(-2) === targetCanonical
-              );
-            });
+          // If [[Foo]] did not match a normal file, look
+          // for a folder-note whose parent directory is Foo.
+          if (
+            matchingFileNames.length === 0 &&
+            !isMultiSegment
+          ) {
+            matchingFileNames =
+              opts.allSlugs.filter((slug) => {
+                const parts = slug.split("/");
+
+                return (
+                  parts.at(-1) === "index" &&
+                  parts.at(-2) === targetCanonical
+                );
+              });
           }
 
           `;
 
-          if (
-            !s.includes(
-              "Fix Quartz v5 short wikilinks to folder notes"
-            )
-          ) {
-            const start = s.indexOf(newDecl);
-            const pos = s.indexOf(marker, start);
+          source =
+            source.slice(0, insertionPoint) +
+            patch +
+            source.slice(insertionPoint);
 
-            if (start === -1 || pos === -1) {
-              throw new Error(
-                "Could not find Quartz shortest-link resolver. Patch not applied."
-              );
-            }
-
-            s =
-              s.slice(0, pos) +
-              patch +
-              s.slice(pos);
-          }
-
-          fs.writeFileSync(file, s);
+          fs.writeFileSync(file, source);
 
           console.log(
             "Quartz folder-note link patch applied."
           );
           EOF
 
-      - name: Install Quartz plugins
-        run: npx quartz plugin install
+      # -------------------------------------------------------
+      # IMPORTANT:
+      # Actually test the patched resolver.
+      #
+      # This prevents a green deployment if the patch exists
+      # but Quartz still resolves [[groups]] incorrectly.
+      # -------------------------------------------------------
+
+      - name: Test Quartz folder-note resolver
+        run: |
+          node --input-type=module <<'EOF'
+          import {
+            transformLink
+          } from "@quartz-community/utils";
+
+          const allSlugs = [
+            "Algebra/index",
+            "Algebra/groups/index",
+            "Algebra/groups/Foundations/index",
+            "Algebra/fields/index"
+          ];
+
+          const result = transformLink(
+            "Algebra/index",
+            "groups",
+            {
+              strategy: "shortest",
+              allSlugs
+            }
+          );
+
+          console.log(
+            "Test [[groups]] resolved to:",
+            result
+          );
+
+          const acceptable = [
+            "groups/",
+            "./groups/",
+            "../Algebra/groups/",
+            "Algebra/groups/"
+          ];
+
+          if (!acceptable.includes(result)) {
+            throw new Error(
+              `Folder-note resolver test FAILED. ` +
+              `[[groups]] resolved to "${result}"`
+            );
+          }
+
+          console.log(
+            "Folder-note resolver test PASSED."
+          );
+          EOF
 
       - name: Build Quartz
         run: npx quartz build
@@ -126,6 +244,11 @@ jobs:
 
   deploy:
     needs: build
+
+    permissions:
+      pages: write
+      id-token: write
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
