@@ -1,0 +1,1 @@
+A set equipped with a closed binary operation

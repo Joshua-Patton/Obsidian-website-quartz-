@@ -1,0 +1,1 @@
+An element of a field is algebraic if there exists a polynomial from 

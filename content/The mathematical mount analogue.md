@@ -1,0 +1,2 @@
+#exposition 
+There are many different directions to go with mathematical education, this text will discuss the routes the the mountain. This analogy is important, as with a mountain mathematics has many peaks, most with the same base camps, each 

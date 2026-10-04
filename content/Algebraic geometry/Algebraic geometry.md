@@ -1,0 +1,6 @@
+- Projective spaces, affine spaces
+- intersection numbers, divisors
+- blow up
+- invariants on algebraic surfaces 
+- every cubic surfaces has 27 lines 
+- 

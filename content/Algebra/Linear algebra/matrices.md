@@ -1,0 +1,11 @@
+- matrix operations
+- matrices as systems of linear equations
+- transpose
+- trace
+- invertibility
+- Rank
+- Determinants
+- eigen theory
+- forms
+- [[matrix decomposition]] 
+- [[important classes of matrices]]

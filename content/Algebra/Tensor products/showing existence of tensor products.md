@@ -1,0 +1,1 @@
+Applying [[trick for showing universal property exists in a category]], we can find a tensor product by taking a free algebra and quotienting out the relations of bileanirity we want, this preserves the universal property due to the freedom of the algebra.

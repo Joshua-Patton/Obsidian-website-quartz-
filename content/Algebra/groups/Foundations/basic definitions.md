@@ -1,0 +1,4 @@
+- a **subgroup** is a subset of a group which is a group under the same operations
+- **order** of an element is the least n such that $g^n=e$
+- **exponent** of a group is the least n such that for all $g\in G \quad g^n=e$ 
+- a group is **simple** if it has no trivial subgroups

@@ -1,0 +1,5 @@
+
+
+- [[magma]]
+- [[semigroup]]
+- [[monoid]]
