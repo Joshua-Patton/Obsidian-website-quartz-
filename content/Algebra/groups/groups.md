@@ -1,0 +1,707 @@
+A monoid with inverses.
+
+
+- [[Foundations]]
+- [[major families of groups]]
+- subgroup stucture
+- [[group action]]
+- [[Sylow theorems]]
+- products and constructions
+- [[group extensions]]
+- free groups and presentations
+- [[Commutator theory]] 
+- solvable groups
+- nilponent groups
+- series and decomposition theory
+- finite group theory 
+- group automorphisms
+- group representations 
+- [[Burnside problem]]
+
+- [[infinite group theory]]
+- 
+- [[lie groups]]
+
+
+Tests
+- [Washington grad prelims exam](https://math.washington.edu/sites/math/files/documents/grad/prelim-exam-algebra-2009.pdf?utm_source=chatgpt.com)
+- 
+
+
+
+
+
+
+
+--- 
+- Foundations
+  - Binary operations
+  - Groups
+  - Abelian groups
+  - Finite and infinite groups
+  - Subgroups
+  - Subgroup tests
+  - Cyclic groups
+  - Generators
+  - Order of a group
+  - Order of an element
+  - Torsion elements
+  - Torsion groups
+  - Cosets
+  - Left and right cosets
+  - Index of a subgroup
+  - Lagrange's theorem
+  - Euler's theorem
+  - Fermat's little theorem
+  - Normal subgroups
+  - Quotient groups
+  - Homomorphisms
+  - Kernels
+  - Images
+  - Monomorphisms
+  - Epimorphisms
+  - Isomorphisms
+  - Endomorphisms
+  - Automorphisms
+  - Inner automorphisms
+  - Outer automorphisms
+  - Characteristic subgroups
+  - Fully invariant subgroups
+  - First isomorphism theorem
+  - Second isomorphism theorem
+  - Third isomorphism theorem
+  - Correspondence theorem
+  - Direct products
+  - Restricted direct products
+  - Direct sums of abelian groups
+  - Finitely generated groups
+  - Finitely generated abelian groups
+  - Structure theorem for finitely generated abelian groups
+  - Permutation groups
+  - Symmetric groups
+  - Alternating groups
+  - Cycle notation
+  - Transpositions
+  - Sign of a permutation
+  - Cayley's theorem
+
+- Subgroup Structure
+  - Subgroup lattices
+  - Lattice of normal subgroups
+  - Maximal subgroups
+  - Minimal normal subgroups
+  - Characteristic subgroups
+  - Core of a subgroup
+  - Normal closure
+  - Commensurable subgroups
+  - Commensurators
+  - Malnormal subgroups
+  - Centralizers
+  - Normalizers
+  - Center of a group
+  - Central products
+  - Ascendant subgroups
+  - Descendant subgroups
+  - Subnormal subgroups
+
+- Group Actions
+  - Group actions
+  - G-sets
+  - Faithful actions
+  - Free actions
+  - Transitive actions
+  - Primitive actions
+  - Regular actions
+  - Orbits
+  - Stabilizers
+  - Orbit-stabilizer theorem
+  - Fixed points
+  - Conjugation actions
+  - Conjugacy classes
+  - Class equation
+  - Centralizers
+  - Normalizers
+  - Cauchy's theorem
+  - Burnside's lemma
+  - Polya enumeration
+  - Double cosets
+  - Double coset decompositions
+  - Mackey decomposition
+  - Blocks of imprimitivity
+  - Multiply transitive groups
+
+
+- Products and Constructions
+  - Direct products
+  - Internal direct products
+  - External direct products
+  - Semidirect products
+  - Internal semidirect products
+  - External semidirect products
+  - Wreath products
+  - Central products
+  - Subdirect products
+  - Fiber products
+  - Pullbacks of groups
+  - Pushouts of groups
+  - Free products
+  - Amalgamated free products
+  - HNN extensions
+  - Graphs of groups
+
+- Group Extensions
+  - Short exact sequences
+  - Extensions of groups
+  - Central extensions
+  - Abelian extensions
+  - Split extensions
+  - Semidirect products as split extensions
+  - Extension equivalence
+  - Extension problems
+  - Schreier theory
+  - Factor sets
+  - 2-cocycles
+  - Classification of extensions
+  - Schur multiplier
+  - Universal central extensions
+  - Perfect groups
+  - Covering groups
+  - Baer invariants
+
+- Free Groups and Presentations
+  - Free groups
+  - Reduced words
+  - Universal property of free groups
+  - Free generating sets
+  - Nielsen transformations
+  - Nielsen-Schreier theorem
+  - Schreier index formula
+  - Generators and relations
+  - Group presentations
+  - Finitely presented groups
+  - Tietze transformations
+  - Deficiency of presentations
+  - Relation modules
+  - One-relator groups
+  - Small-cancellation presentations
+  - Coxeter presentations
+  - Artin presentations
+
+- Commutator Theory
+  - Commutators
+  - Commutator identities
+  - Commutator subgroups
+  - Derived subgroup
+  - Abelianization
+  - Higher commutators
+  - Commutator calculus
+  - Three subgroup lemma
+  - Hall-Witt identity
+  - Lower central series
+  - Upper central series
+  - Derived series
+  - Central series
+
+- Solvable Groups
+  - Solvable groups
+  - Derived length
+  - Solvable extensions
+  - Metabelian groups
+  - Polycyclic groups
+  - Supersolvable groups
+  - Hall subgroups
+  - Hall's theorems
+  - Schur-Zassenhaus theorem
+  - Carter subgroups
+  - Fitting subgroup
+  - Fitting series
+  - Fitting height
+
+- Nilpotent Groups
+  - Nilpotent groups
+  - Nilpotency class
+  - Lower central series
+  - Upper central series
+  - Central products
+  - Finite nilpotent groups
+  - Characterization via Sylow subgroups
+  - Frattini subgroup
+  - Frattini argument
+  - Burnside basis theorem
+  - Locally nilpotent groups
+  - Engel conditions
+  - Engel groups
+
+- Series and Decomposition Theory
+  - Normal series
+  - Subnormal series
+  - Composition series
+  - Chief series
+  - Refinements
+  - Schreier refinement theorem
+  - Jordan-Holder theorem
+  - Chief factors
+  - Composition factors
+  - Krull-Schmidt theorem
+  - Remak decomposition
+  - Directly indecomposable groups
+
+- Finite Group Theory
+  - Finite p-groups
+  - Frattini subgroups
+  - Transfer
+  - Burnside transfer theorem
+  - Normal p-complements
+  - Frobenius groups
+  - Frobenius kernels
+  - Frobenius complements
+  - Burnside's p^a q^b theorem
+  - Thompson's theorems
+  - Local analysis
+  - Signalizer functors
+  - Strongly embedded subgroups
+  - Finite simple groups
+  - Minimal simple groups
+  - Alternating groups
+  - Classical groups
+  - Groups of Lie type
+  - Chevalley groups
+  - Steinberg groups
+  - Suzuki groups
+  - Ree groups
+  - Sporadic groups
+  - Mathieu groups
+  - Monster group
+  - Classification of finite simple groups
+
+- Automorphism Theory
+  - Automorphism groups
+  - Inner automorphisms
+  - Outer automorphism groups
+  - Complete groups
+  - Characteristic subgroups
+  - Automorphisms of cyclic groups
+  - Automorphisms of abelian groups
+  - Automorphisms of finite groups
+  - Automorphism towers
+  - IA-automorphisms
+  - Nielsen automorphisms
+
+- Representation Theory
+  - Linear representations
+  - Matrix representations
+  - Group algebras
+  - Modules over group algebras
+  - Irreducible representations
+  - Completely reducible representations
+  - Maschke's theorem
+  - Schur's lemma
+  - Characters
+  - Character tables
+  - Orthogonality relations
+  - Regular representation
+  - Permutation representations
+  - Induced representations
+  - Restricted representations
+  - Frobenius reciprocity
+  - Mackey theory
+  - Tensor products of representations
+  - Representation rings
+  - Modular representation theory
+  - Blocks
+  - Brauer characters
+  - Projective representations
+  - Infinite-dimensional representations
+  - Unitary representations
+
+- Combinatorial Group Theory
+  - Words in generators
+  - Word problem
+  - Conjugacy problem
+  - Isomorphism problem
+  - Membership problem
+  - Dehn's problems
+  - Rewriting systems
+  - Normal forms
+  - Van Kampen diagrams
+  - Dehn functions
+  - Small-cancellation theory
+  - One-relator groups
+  - Freiheitssatz
+  - Algorithmic group theory
+
+- Geometric Group Theory
+  - Cayley graphs
+  - Schreier graphs
+  - Word metrics
+  - Finitely generated groups as metric spaces
+  - Quasi-isometries
+  - Quasi-geodesics
+  - Growth functions
+  - Polynomial growth
+  - Exponential growth
+  - Intermediate growth
+  - Grigorchuk groups
+  - Gromov's theorem on polynomial growth
+  - Hyperbolic groups
+  - Gromov products
+  - Boundaries of hyperbolic groups
+  - Relatively hyperbolic groups
+  - Automatic groups
+  - Biautomatic groups
+  - CAT(0) spaces
+  - CAT(0) groups
+  - Cube complexes
+  - CAT(0) cube complexes
+  - Median spaces
+  - Isoperimetric inequalities
+  - Asymptotic cones
+  - Ends of groups
+  - Stallings theorem on ends
+  - Amenability
+  - Følner conditions
+  - Property (T)
+  - Haagerup property
+  - Random walks on groups
+
+- Groups Acting on Trees
+  - Trees
+  - Group actions on trees
+  - Bass-Serre theory
+  - Graphs of groups
+  - Fundamental groups of graphs of groups
+  - Amalgamated products
+  - HNN extensions
+  - Bruhat-Tits trees
+  - Serre's property FA
+
+- Coxeter and Artin Groups
+  - Coxeter groups
+  - Coxeter diagrams
+  - Reflection groups
+  - Root systems
+  - Bruhat order
+  - Artin groups
+  - Braid groups
+  - Right-angled Artin groups
+  - Right-angled Coxeter groups
+  - Buildings
+
+- Topological Groups
+  - Topological groups
+  - Continuous homomorphisms
+  - Topological subgroups
+  - Quotient topological groups
+  - Locally compact groups
+  - Compact groups
+  - Connected groups
+  - Totally disconnected groups
+  - Haar measure
+  - Pontryagin duality
+  - Peter-Weyl theorem
+  - Polish groups
+  - Totally disconnected locally compact groups
+
+- Lie Groups
+  - Matrix Lie groups
+  - Lie groups
+  - Lie algebras
+  - One-parameter subgroups
+  - Exponential map
+  - Adjoint representation
+  - Lie correspondence
+  - Connected Lie groups
+  - Simply connected Lie groups
+  - Covering groups
+  - Compact Lie groups
+  - Semisimple Lie groups
+  - Solvable Lie groups
+  - Nilpotent Lie groups
+  - Classical Lie groups
+  - GL(n)
+  - SL(n)
+  - O(n)
+  - SO(n)
+  - U(n)
+  - SU(n)
+  - Sp(n)
+  - Maximal tori
+  - Weyl groups
+  - Root systems
+  - Dynkin diagrams
+  - Structure theory of semisimple Lie groups
+
+- Algebraic Groups
+  - Linear algebraic groups
+  - Affine algebraic groups
+  - Algebraic group actions
+  - Algebraic tori
+  - Unipotent groups
+  - Reductive groups
+  - Semisimple algebraic groups
+  - Borel subgroups
+  - Parabolic subgroups
+  - Maximal tori
+  - Root data
+  - Weyl groups
+  - Bruhat decomposition
+  - Flag varieties
+  - Chevalley groups
+  - Groups over finite fields
+  - Group schemes
+
+- Profinite Groups
+  - Inverse limits of finite groups
+  - Profinite groups
+  - Profinite topology
+  - Pro-p groups
+  - Topologically finitely generated groups
+  - Residually finite groups
+  - Profinite completions
+  - Frattini theory for pro-p groups
+  - p-adic analytic groups
+  - Galois groups as profinite groups
+  - Absolute Galois groups
+
+- Residual Properties
+  - Residually finite groups
+  - Residually nilpotent groups
+  - Residually solvable groups
+  - Hopfian groups
+  - Co-Hopfian groups
+  - Linear groups and residual finiteness
+  - Malcev's theorem
+
+- Burnside-Type Problems
+  - Periodic groups
+  - Torsion groups
+  - Groups of finite exponent
+  - Burnside problem
+  - General Burnside problem
+  - Restricted Burnside problem
+  - Novikov-Adian theorem
+  - Golod-Shafarevich groups
+  - Zelmanov's theorem
+  - Associated Lie rings
+  - Associated Lie algebras
+  - Engel methods
+  - Lie methods in group theory
+
+- Arithmetic Groups
+  - Linear groups
+  - GL(n,Z)
+  - SL(n,Z)
+  - Arithmetic groups
+  - Lattices in Lie groups
+  - S-arithmetic groups
+  - Congruence subgroups
+  - Congruence subgroup problem
+  - Modular groups
+  - PSL(2,Z)
+  - p-adic groups
+  - Strong approximation
+  - Kazhdan's property (T)
+
+- Group Cohomology
+  - G-modules
+  - Invariants
+  - Coinvariants
+  - Derivations
+  - Crossed homomorphisms
+  - Group cohomology
+  - H^0
+  - H^1
+  - H^2
+  - Higher cohomology
+  - Cocyles
+  - Coboundaries
+  - Cohomological classification of extensions
+  - Central extensions
+  - Projective representations
+  - Cup products
+  - Restriction maps
+  - Corestriction maps
+  - Inflation-restriction sequence
+  - Lyndon-Hochschild-Serre spectral sequence
+  - Cohomological dimension
+  - Tate cohomology
+
+- Group Homology
+  - Group homology
+  - Bar resolution
+  - Standard resolution
+  - H_0
+  - H_1 and abelianization
+  - H_2
+  - Schur multiplier
+  - Hopf formula
+  - Homological dimension
+
+- Homological Group Theory
+  - Resolutions
+  - Projective resolutions
+  - Derived functors
+  - Tor
+  - Ext
+  - Group homology as Tor
+  - Group cohomology as Ext
+  - Spectral sequences
+  - Homological finiteness properties
+  - FP_n groups
+  - Duality groups
+  - Poincare duality groups
+
+- Categorical Group Theory
+  - Category Grp
+  - Forgetful functors
+  - Free group functor
+  - Free-forgetful adjunction
+  - Abelianization functor
+  - Abelianization as an adjunction
+  - Products in Grp
+  - Coproducts in Grp
+  - Equalizers
+  - Coequalizers
+  - Pullbacks
+  - Pushouts
+  - Limits
+  - Colimits
+  - Kernels categorically
+  - Cokernels and normal closure
+  - Internal groups
+  - Group objects
+  - Internal automorphisms
+  - Actions as categorical structures
+  - Monads associated with groups
+  - Simplicial groups
+
+- Groups and Topology
+  - Fundamental groups
+  - Fundamental groupoids
+  - Covering spaces
+  - Deck transformation groups
+  - Van Kampen theorem
+  - Classifying spaces BG
+  - Eilenberg-Mac Lane spaces
+  - K(G,1) spaces
+  - Homotopy groups and group actions
+  - Mapping class groups
+  - Braid groups
+  - Knot groups
+  - 3-manifold groups
+  - Orbifold fundamental groups
+
+- Groups and Number Theory
+  - Galois groups
+  - Absolute Galois groups
+  - Decomposition groups
+  - Inertia groups
+  - Frobenius elements
+  - Class field theory
+  - Galois representations
+  - Arithmetic fundamental groups
+  - Profinite Galois groups
+  - Langlands-related representation theory
+
+- Groups and Algebraic Geometry
+  - Algebraic group actions
+  - Group schemes
+  - Automorphism groups of varieties
+  - Picard schemes
+  - Abelian varieties
+  - Fundamental group schemes
+  - Etale fundamental groups
+  - Monodromy groups
+  - Geometric invariant theory
+  - Moduli and group actions
+  - Stacks and quotient stacks
+
+- Computational Group Theory
+  - Permutation group algorithms
+  - Matrix group algorithms
+  - Todd-Coxeter algorithm
+  - Coset enumeration
+  - Knuth-Bendix completion
+  - Schreier-Sims algorithm
+  - Computational presentations
+  - Computing Sylow subgroups
+  - Computing automorphism groups
+  - GAP
+  - MAGMA
+
+- Infinite Group Theory
+  - Locally finite groups
+  - Locally nilpotent groups
+  - Locally solvable groups
+  - Periodic groups
+  - Simple infinite groups
+  - Finitely generated infinite simple groups
+  - Branch groups
+  - Grigorchuk group
+  - Thompson groups
+  - Self-similar groups
+  - Groups acting on rooted trees
+  - Just-infinite groups
+
+- Model Theory of Groups
+  - First-order theories of groups
+  - Definable subgroups
+  - Stable groups
+  - Groups of finite Morley rank
+  - Model theory of free groups
+  - Elementary equivalence of groups
+  - Ultraproducts of groups
+  - Pseudofinite groups
+
+- Probabilistic Group Theory
+  - Random groups
+  - Gromov density model
+  - Random presentations
+  - Probabilistic generation
+  - Random walks
+  - Expansion in groups
+  - Expander graphs
+  - Cayley expanders
+
+- Major Families and Examples
+  - Cyclic groups
+  - Dihedral groups
+  - Symmetric groups
+  - Alternating groups
+  - Quaternion groups
+  - Generalized quaternion groups
+  - Heisenberg groups
+  - Free groups
+  - Braid groups
+  - Coxeter groups
+  - Artin groups
+  - Thompson groups
+  - Grigorchuk group
+  - Matrix groups
+  - Classical groups
+  - Chevalley groups
+  - Sporadic simple groups
+  - Monster group
+
+- Major Research Directions
+  - Finite group theory
+  - Classification of finite simple groups
+  - Representation theory
+  - Modular representation theory
+  - Geometric group theory
+  - Combinatorial group theory
+  - Computational group theory
+  - Profinite group theory
+  - Infinite group theory
+  - Topological group theory
+  - Lie groups
+  - Algebraic groups
+  - Arithmetic groups
+  - Group cohomology
+  - Homological group theory
+  - Model theory of groups
+  - Probabilistic group theory
+  - Galois groups
+  - Groups in topology
+  - Groups in algebraic geometry
+  - Groups in number theory
