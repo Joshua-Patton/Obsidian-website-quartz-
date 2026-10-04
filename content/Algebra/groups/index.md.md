@@ -1,10 +1,10 @@
 A monoid with inverses.
 
 
-- [[Foundations]]
+- [[Mathematics/Algebra/groups/Foundations/index.md]]
 - [[major families of groups]]
 - subgroup stucture
-- [[group action]]
+- [[Mathematics/Algebra/groups/group action/index.md]]
 - [[Sylow theorems]]
 - products and constructions
 - [[group extensions]]
@@ -16,7 +16,7 @@ A monoid with inverses.
 - finite group theory 
 - group automorphisms
 - group representations 
-- [[Burnside problem]]
+- [[Mathematics/Algebra/groups/Burnside problem/index.md]]
 
 - [[infinite group theory]]
 - 

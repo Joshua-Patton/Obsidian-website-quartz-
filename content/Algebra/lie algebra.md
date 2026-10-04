@@ -1,4 +1,4 @@
-A [[Linear algebra]] equipped with a bracket operation satisfying 
+A [[Mathematics/Algebra/Linear algebra/index.md]] equipped with a bracket operation satisfying 
 - bilinearity $[ax+by,z]=a[x,y] +b[y,z]$
 - alternating $[x,x] =0$
 - Jacobi identity$[x,[y,z]]+[y,[x,z]]+[z,[x,y]]=0$

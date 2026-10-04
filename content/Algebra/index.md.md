@@ -1,16 +1,16 @@
 
 
 
-- [[groups]]
-- [[rings]]
-- [[fields]]
-- [[Linear algebra]]
-- [[module]] 
+- [[Mathematics/Algebra/groups/index.md]]
+- [[Mathematics/Algebra/rings/index.md]]
+- [[Mathematics/Algebra/fields/index.md]]
+- [[Mathematics/Algebra/Linear algebra/index.md]]
+- [[Mathematics/Algebra/module/index.md]] 
 - [[R-algebras]]
-- [[Tensor products]]
-- [[universal algebra]]
+- [[Mathematics/Algebra/Tensor products/index.md]]
+- [[Mathematics/Algebra/universal algebra/index.md]]
 
-- [[Category theory]]
+- [[Mathematics/Algebra/Category theory/index.md]]
 
 - [[tensor algebra]]
 - [[symmetrical algebras]]

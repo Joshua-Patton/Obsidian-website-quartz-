@@ -8,10 +8,10 @@ Welcome to my notes.
 
 ## Mathematics2content 
 
-- [[Algebra]]
-- [[Analysis]]
+- [[Mathematics/Algebra/index.md]]
+- [[Mathematics/Analysis/index.md]]
 - [[Topology]]
-- [[Category Theory]]
+- [[Mathematics/Algebra/Category theory/index.md]]
 
 ## About
 

@@ -1,4 +1,4 @@
-A field is abelian [[groups|group]] under addition and abelian group under multiplication, with distributive property.
+A field is abelian [[Mathematics/Algebra/groups/index.md|group]] under addition and abelian group under multiplication, with distributive property.
 
 - the characteristic - how many times you must add 1 to get to zero, (zero if it never happens)
 
@@ -10,8 +10,8 @@ A field is abelian [[groups|group]] under addition and abelian group under multi
 
 - [[field extensions]]
 
-- [[Reducibility]]
-- [[Field polynomials]]
+- [[Mathematics/Algebra/fields/Reducibility/index.md]]
+- [[Mathematics/Algebra/fields/Field polynomials/index.md]]
 
 
 
