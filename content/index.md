@@ -6,7 +6,7 @@ title: Joshua Patton
 
 Welcome to my notes.
 
-## Mathematics
+## Mathematics2content 
 
 - [[Algebra]]
 - [[Analysis]]
