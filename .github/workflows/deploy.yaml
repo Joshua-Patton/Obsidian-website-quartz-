@@ -51,18 +51,35 @@ jobs:
       - name: Install Quartz plugins
         run: npx quartz plugin install
 
-      # Temporary fix for:
-      # https://github.com/quartz-community/utils/issues/4
+      # -------------------------------------------------------
+      # Temporary fix for Quartz v5 folder-note wikilinks
       #
-      # Quartz turns:
+      # Example:
+      #
+      #   [[groups]]
+      #
+      # from:
+      #
+      #   Algebra/Algebra.md
+      #
+      # should resolve to:
+      #
+      #   /algebra/groups/
+      #
+      # when the note is:
       #
       #   Algebra/groups/groups.md
       #
-      # into:
+      # Quartz internally turns that folder note into:
       #
       #   Algebra/groups/index
       #
-      # but utils 1.0.1 fails to resolve [[groups]] to it.
+      # The current shortest-link resolver fails to match
+      # "groups" against that /index slug.
+      #
+      # We patch both Quartz utils and the bundled copy inside
+      # crawl-links.
+      # -------------------------------------------------------
 
       - name: Patch Quartz folder-note links
         run: |
@@ -71,7 +88,8 @@ jobs:
 
           const files = [
             "node_modules/@quartz-community/utils/dist/path.js",
-            "node_modules/@quartz-community/utils/dist/index.js"
+            "node_modules/@quartz-community/utils/dist/index.js",
+            "node_modules/@quartz-community/crawl-links/dist/index.js"
           ];
 
           const PATCH_MARKER =
@@ -99,7 +117,8 @@ jobs:
             const letDeclaration =
               "let matchingFileNames = opts.allSlugs.filter((slug) => {";
 
-            let resolverStart = source.indexOf(constDeclaration);
+            let resolverStart =
+              source.indexOf(constDeclaration);
 
             if (resolverStart !== -1) {
               source = source.replace(
@@ -107,9 +126,11 @@ jobs:
                 letDeclaration
               );
 
-              resolverStart = source.indexOf(letDeclaration);
+              resolverStart =
+                source.indexOf(letDeclaration);
             } else {
-              resolverStart = source.indexOf(letDeclaration);
+              resolverStart =
+                source.indexOf(letDeclaration);
             }
 
             if (resolverStart === -1) {
@@ -122,10 +143,11 @@ jobs:
             const successMarker =
               "if (matchingFileNames.length === 1) {";
 
-            const insertionPoint = source.indexOf(
-              successMarker,
-              resolverStart
-            );
+            const insertionPoint =
+              source.indexOf(
+                successMarker,
+                resolverStart
+              );
 
             if (insertionPoint === -1) {
               console.log(
@@ -137,9 +159,11 @@ jobs:
             const patch = `
             // QUARTZ_FOLDER_NOTE_SHORTEST_LINK_FIX
             //
-            // A folder note Foo/Foo.md becomes Foo/index.
-            // For a short [[Foo]] link, retry using the
-            // parent folder name when no normal file matched.
+            // Foo/Foo.md becomes Foo/index internally.
+            //
+            // When [[Foo]] did not match a normal file,
+            // look for an index slug whose parent folder
+            // is named Foo.
             if (
               matchingFileNames.length === 0 &&
               !isMultiSegment
@@ -170,17 +194,18 @@ jobs:
 
           if (patchedFiles === 0) {
             throw new Error(
-              "Could not patch any Quartz utils implementation."
+              "Could not patch any Quartz resolver implementation."
             );
           }
 
           console.log(
-            `Quartz patch completed. Patched ${patchedFiles} file(s).`
+            `Quartz patch completed. ${patchedFiles} file(s) patched.`
           );
           EOF
 
-      # This is the important part:
-      # verify the function Quartz actually imports.
+      # -------------------------------------------------------
+      # Test the exported Quartz resolver itself
+      # -------------------------------------------------------
 
       - name: Test Quartz folder-note resolver
         run: |
@@ -215,23 +240,96 @@ jobs:
             result === "groups"
           ) {
             throw new Error(
-              `FAILED: [[groups]] still resolves incorrectly to "${result}"`
+              `FAILED: [[groups]] resolved incorrectly to "${result}"`
             );
           }
 
           if (!result.includes("groups")) {
             throw new Error(
-              `FAILED: unexpected result "${result}"`
+              `FAILED: unexpected resolver result "${result}"`
             );
           }
 
           console.log(
-            "Folder-note resolver test PASSED."
+            "Quartz resolver test PASSED."
           );
           EOF
 
+      # -------------------------------------------------------
+      # Build the real site
+      # -------------------------------------------------------
+
       - name: Build Quartz
         run: npx quartz build
+
+      # -------------------------------------------------------
+      # Test the ACTUAL generated Algebra page.
+      #
+      # This is the important final test. Even if the synthetic
+      # resolver test succeeds, deployment will fail if the
+      # generated HTML still contains ../groups.
+      # -------------------------------------------------------
+
+      - name: Verify generated folder-note links
+        run: |
+          node <<'EOF'
+          const fs = require("fs");
+
+          const file = "public/algebra/index.html";
+
+          if (!fs.existsSync(file)) {
+            throw new Error(
+              `Generated Algebra page not found: ${file}`
+            );
+          }
+
+          const html =
+            fs.readFileSync(file, "utf8");
+
+          console.log(
+            "Checking generated Algebra page..."
+          );
+
+          const badLinks = [
+            'href="../groups"',
+            'href="/groups"',
+            'href="groups"'
+          ];
+
+          for (const bad of badLinks) {
+            if (html.includes(bad)) {
+              throw new Error(
+                `FAILED: generated Algebra page contains broken link ${bad}`
+              );
+            }
+          }
+
+          const correctPatterns = [
+            "../algebra/groups/",
+            "/algebra/groups/",
+            "algebra/groups/"
+          ];
+
+          const foundCorrect =
+            correctPatterns.some(
+              (pattern) =>
+                html.includes(pattern)
+            );
+
+          if (!foundCorrect) {
+            throw new Error(
+              "FAILED: generated Algebra page does not contain the correct algebra/groups link."
+            );
+          }
+
+          console.log(
+            "Generated [[groups]] link is correct."
+          );
+
+          console.log(
+            "Folder-note HTML verification PASSED."
+          );
+          EOF
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
