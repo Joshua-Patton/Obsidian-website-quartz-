@@ -37,245 +37,761 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Cache Quartz plugins
-        uses: actions/cache@v5
-        with:
-          path: .quartz/plugins
-          key: ${{ runner.os }}-plugins-${{ hashFiles('quartz.lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-plugins-
-
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Quartz plugins
-        run: npx quartz plugin install
+      # ---------------------------------------------------------
+      # QUARTZ V5 FOLDER-NOTE WORKAROUND
+      #
+      # Example vault structure:
+      #
+      # content/
+      #   Algebra/
+      #     Algebra.md
+      #     groups/
+      #       groups.md
+      #
+      # [[groups]]
+      #
+      # is temporarily changed in the Actions workspace to:
+      #
+      # [[Algebra/groups/groups|groups]]
+      #
+      # This does NOT commit or modify the actual vault.
+      # ---------------------------------------------------------
 
-      # -------------------------------------------------------
-      # Temporary fix for Quartz v5 folder-note wikilinks
-      #
-      # Example:
-      #
-      #   [[groups]]
-      #
-      # from:
-      #
-      #   Algebra/Algebra.md
-      #
-      # should resolve to:
-      #
-      #   /algebra/groups/
-      #
-      # when the note is:
-      #
-      #   Algebra/groups/groups.md
-      #
-      # Quartz internally turns that folder note into:
-      #
-      #   Algebra/groups/index
-      #
-      # The current shortest-link resolver fails to match
-      # "groups" against that /index slug.
-      #
-      # We patch both Quartz utils and the bundled copy inside
-      # crawl-links.
-      # -------------------------------------------------------
-
-      - name: Patch Quartz folder-note links
+      - name: Resolve short folder-note wikilinks
         run: |
           node <<'EOF'
           const fs = require("fs");
+          const path = require("path");
 
-          const files = [
-            "node_modules/@quartz-community/utils/dist/path.js",
-            "node_modules/@quartz-community/utils/dist/index.js",
-            "node_modules/@quartz-community/crawl-links/dist/index.js"
-          ];
+          const CONTENT = "content";
 
-          const PATCH_MARKER =
-            "QUARTZ_FOLDER_NOTE_SHORTEST_LINK_FIX";
+          function walk(dir) {
+            if (!fs.existsSync(dir)) return [];
 
-          let patchedFiles = 0;
+            const out = [];
 
-          for (const file of files) {
-            if (!fs.existsSync(file)) {
-              console.log(`Skipping missing file: ${file}`);
-              continue;
+            for (const entry of fs.readdirSync(dir, {
+              withFileTypes: true
+            })) {
+              const full = path.join(dir, entry.name);
+
+              if (entry.isDirectory()) {
+                out.push(...walk(full));
+              } else {
+                out.push(full);
+              }
             }
 
-            let source = fs.readFileSync(file, "utf8");
+            return out;
+          }
 
-            if (source.includes(PATCH_MARKER)) {
-              console.log(`Patch already present: ${file}`);
-              patchedFiles++;
-              continue;
+          function slash(p) {
+            return p.replace(/\\/g, "/");
+          }
+
+          function normaliseName(name) {
+            return name
+              .trim()
+              .replace(/\.md$/i, "")
+              .toLowerCase();
+          }
+
+          const markdownFiles = walk(CONTENT)
+            .filter(file => file.toLowerCase().endsWith(".md"));
+
+          /*
+           * folderNotes:
+           *
+           *   groups -> Algebra/groups/groups
+           *
+           * Only unique folder-note names are automatically
+           * expanded.
+           */
+          const folderNotes = new Map();
+
+          /*
+           * ordinaryNotes prevents a folder note from taking
+           * precedence over an ordinary note with the same name.
+           */
+          const ordinaryNotes = new Map();
+
+          function add(map, key, value) {
+            if (!map.has(key)) {
+              map.set(key, new Set());
             }
 
-            const constDeclaration =
-              "const matchingFileNames = opts.allSlugs.filter((slug) => {";
+            map.get(key).add(value);
+          }
 
-            const letDeclaration =
-              "let matchingFileNames = opts.allSlugs.filter((slug) => {";
+          for (const file of markdownFiles) {
+            const relative = slash(
+              path.relative(CONTENT, file)
+            );
 
-            let resolverStart =
-              source.indexOf(constDeclaration);
+            const base = path.basename(
+              file,
+              path.extname(file)
+            );
 
-            if (resolverStart !== -1) {
-              source = source.replace(
-                constDeclaration,
-                letDeclaration
-              );
+            const parent = path.basename(
+              path.dirname(file)
+            );
 
-              resolverStart =
-                source.indexOf(letDeclaration);
+            const baseLower = base.toLowerCase();
+            const parentLower = parent.toLowerCase();
+
+            const isFolderNote =
+              baseLower === parentLower ||
+              baseLower === "index";
+
+            const target =
+              relative.replace(/\.md$/i, "");
+
+            if (isFolderNote) {
+              /*
+               * Foo/Foo.md -> key "foo"
+               * Foo/index.md -> key "foo"
+               */
+              const key =
+                baseLower === "index"
+                  ? normaliseName(parent)
+                  : normaliseName(base);
+
+              add(folderNotes, key, target);
             } else {
-              resolverStart =
-                source.indexOf(letDeclaration);
+              add(
+                ordinaryNotes,
+                normaliseName(base),
+                target
+              );
+            }
+          }
+
+          console.log(
+            `Found ${folderNotes.size} folder-note names.`
+          );
+
+          let replacements = 0;
+          const examples = [];
+
+          function findUnescapedPipe(text) {
+            for (let i = 0; i < text.length; i++) {
+              if (text[i] !== "|") continue;
+
+              let backslashes = 0;
+
+              for (
+                let j = i - 1;
+                j >= 0 && text[j] === "\\";
+                j--
+              ) {
+                backslashes++;
+              }
+
+              if (backslashes % 2 === 0) {
+                return i;
+              }
             }
 
-            if (resolverStart === -1) {
-              console.log(
-                `Shortest resolver not present in ${file}`
-              );
-              continue;
-            }
+            return -1;
+          }
 
-            const successMarker =
-              "if (matchingFileNames.length === 1) {";
+          function rewriteLine(line, file) {
+            return line.replace(
+              /(!?)\[\[([^\]]+)\]\]/g,
+              (whole, embed, inner) => {
+                const pipeIndex =
+                  findUnescapedPipe(inner);
 
-            const insertionPoint =
-              source.indexOf(
-                successMarker,
-                resolverStart
-              );
+                const destination =
+                  pipeIndex === -1
+                    ? inner
+                    : inner.slice(0, pipeIndex);
 
-            if (insertionPoint === -1) {
-              console.log(
-                `Could not find insertion point in ${file}`
-              );
-              continue;
-            }
+                const existingAlias =
+                  pipeIndex === -1
+                    ? null
+                    : inner.slice(pipeIndex + 1);
 
-            const patch = `
-            // QUARTZ_FOLDER_NOTE_SHORTEST_LINK_FIX
-            //
-            // Foo/Foo.md becomes Foo/index internally.
-            //
-            // When [[Foo]] did not match a normal file,
-            // look for an index slug whose parent folder
-            // is named Foo.
-            if (
-              matchingFileNames.length === 0 &&
-              !isMultiSegment
-            ) {
-              matchingFileNames =
-                opts.allSlugs.filter((slug) => {
-                  const parts = slug.split("/");
+                const hashIndex =
+                  destination.indexOf("#");
 
-                  return (
-                    parts.at(-1) === "index" &&
-                    parts.at(-2) === targetCanonical
+                const targetRaw =
+                  (
+                    hashIndex === -1
+                      ? destination
+                      : destination.slice(
+                          0,
+                          hashIndex
+                        )
+                  ).trim();
+
+                const anchor =
+                  hashIndex === -1
+                    ? ""
+                    : destination.slice(hashIndex);
+
+                if (!targetRaw) {
+                  return whole;
+                }
+
+                /*
+                 * Already has an explicit path.
+                 */
+                if (
+                  targetRaw.includes("/") ||
+                  targetRaw.includes("\\")
+                ) {
+                  return whole;
+                }
+
+                /*
+                 * Ignore URL-like things and unusual schemes.
+                 */
+                if (
+                  targetRaw.includes("://") ||
+                  /^[a-z][a-z0-9+.-]*:/i.test(
+                    targetRaw
+                  )
+                ) {
+                  return whole;
+                }
+
+                const key =
+                  normaliseName(targetRaw);
+
+                /*
+                 * A normal note with this filename exists.
+                 * Let Quartz resolve it normally.
+                 */
+                const normalMatches =
+                  ordinaryNotes.get(key);
+
+                if (
+                  normalMatches &&
+                  normalMatches.size > 0
+                ) {
+                  return whole;
+                }
+
+                const matches =
+                  folderNotes.get(key);
+
+                /*
+                 * Only modify unambiguous folder notes.
+                 */
+                if (!matches || matches.size !== 1) {
+                  return whole;
+                }
+
+                const fullTarget =
+                  [...matches][0];
+
+                let replacementInner =
+                  fullTarget + anchor;
+
+                if (existingAlias !== null) {
+                  replacementInner +=
+                    "|" + existingAlias;
+                } else if (!embed) {
+                  /*
+                   * Preserve the text the reader sees.
+                   */
+                  let display =
+                    targetRaw.replace(/\.md$/i, "");
+
+                  if (anchor) {
+                    display +=
+                      " > " +
+                      anchor.replace(/^#/, "");
+                  }
+
+                  replacementInner +=
+                    "|" + display;
+                }
+
+                const replacement =
+                  `${embed}[[${replacementInner}]]`;
+
+                replacements++;
+
+                if (examples.length < 40) {
+                  examples.push(
+                    `${slash(
+                      path.relative(CONTENT, file)
+                    )}: ${whole} -> ${replacement}`
                   );
-                });
-            }
+                }
 
-            `;
-
-            source =
-              source.slice(0, insertionPoint) +
-              patch +
-              source.slice(insertionPoint);
-
-            fs.writeFileSync(file, source);
-
-            console.log(`Patched: ${file}`);
-            patchedFiles++;
-          }
-
-          if (patchedFiles === 0) {
-            throw new Error(
-              "Could not patch any Quartz resolver implementation."
+                return replacement;
+              }
             );
           }
 
+          for (const file of markdownFiles) {
+            const original =
+              fs.readFileSync(file, "utf8");
+
+            const lines =
+              original.split(/\r?\n/);
+
+            let fence = null;
+
+            const rewritten = lines.map(line => {
+              const fenceMatch =
+                line.match(/^\s*(`{3,}|~{3,})/);
+
+              if (fenceMatch) {
+                const current =
+                  fenceMatch[1];
+
+                if (fence === null) {
+                  fence = current[0];
+                } else if (
+                  current[0] === fence
+                ) {
+                  fence = null;
+                }
+
+                return line;
+              }
+
+              /*
+               * Do not touch fenced code blocks.
+               */
+              if (fence !== null) {
+                return line;
+              }
+
+              return rewriteLine(line, file);
+            }).join("\n");
+
+            if (rewritten !== original) {
+              fs.writeFileSync(
+                file,
+                rewritten
+              );
+            }
+          }
+
           console.log(
-            `Quartz patch completed. ${patchedFiles} file(s) patched.`
+            `Expanded ${replacements} short folder-note wikilink(s).`
           );
+
+          if (examples.length > 0) {
+            console.log("");
+            console.log("Examples:");
+
+            for (const example of examples) {
+              console.log("  " + example);
+            }
+          }
+
+          /*
+           * The current vault is known to contain [[groups]],
+           * so print its resolved folder-note target.
+           */
+          const groups =
+            folderNotes.get("groups");
+
+          if (groups) {
+            console.log("");
+            console.log(
+              "groups folder-note target:",
+              [...groups].join(", ")
+            );
+          }
           EOF
 
-      # -------------------------------------------------------
-      # Test the exported Quartz resolver itself
-      # -------------------------------------------------------
-
-      - name: Test Quartz folder-note resolver
-        run: |
-          node --input-type=module <<'EOF'
-          import {
-            transformLink
-          } from "@quartz-community/utils";
-
-          const allSlugs = [
-            "Algebra/index",
-            "Algebra/groups/index",
-            "Algebra/groups/Foundations/index",
-            "Algebra/fields/index"
-          ];
-
-          const result = transformLink(
-            "Algebra/index",
-            "groups",
-            {
-              strategy: "shortest",
-              allSlugs
-            }
-          );
-
-          console.log(
-            `[[groups]] resolved to: ${result}`
-          );
-
-          if (
-            result === "../groups" ||
-            result === "/groups" ||
-            result === "groups"
-          ) {
-            throw new Error(
-              `FAILED: [[groups]] resolved incorrectly to "${result}"`
-            );
-          }
-
-          if (!result.includes("groups")) {
-            throw new Error(
-              `FAILED: unexpected resolver result "${result}"`
-            );
-          }
-
-          console.log(
-            "Quartz resolver test PASSED."
-          );
-          EOF
-
-      # -------------------------------------------------------
-      # Build the real site
-      # -------------------------------------------------------
+      # ---------------------------------------------------------
+      # BUILD QUARTZ
+      # ---------------------------------------------------------
 
       - name: Build Quartz
         run: npx quartz build
 
-      # -------------------------------------------------------
-      # Test the ACTUAL generated Algebra page.
+      # ---------------------------------------------------------
+      # SAFETY PASS
       #
-      # This is the important final test. Even if the synthetic
-      # resolver test succeeds, deployment will fail if the
-      # generated HTML still contains ../groups.
-      # -------------------------------------------------------
+      # If Quartz has nevertheless generated something such as
+      #
+      #   href="../groups"
+      #
+      # which resolves to the nonexistent root route /groups,
+      # and there is one unique folder page called groups,
+      # rewrite the generated HTML to its real folder route.
+      #
+      # This affects generated public HTML only.
+      # ---------------------------------------------------------
+
+      - name: Repair remaining generated folder-note links
+        run: |
+          node <<'EOF'
+          const fs = require("fs");
+          const path = require("path");
+
+          const PUBLIC = "public";
+          const CONTENT = "content";
+
+          function walk(dir) {
+            if (!fs.existsSync(dir)) return [];
+
+            const out = [];
+
+            for (const entry of fs.readdirSync(dir, {
+              withFileTypes: true
+            })) {
+              const full = path.join(dir, entry.name);
+
+              if (entry.isDirectory()) {
+                out.push(...walk(full));
+              } else {
+                out.push(full);
+              }
+            }
+
+            return out;
+          }
+
+          function slash(p) {
+            return p.replace(/\\/g, "/");
+          }
+
+          function normalise(s) {
+            try {
+              s = decodeURIComponent(s);
+            } catch {}
+
+            return s
+              .trim()
+              .replace(/\.md$/i, "")
+              .toLowerCase();
+          }
+
+          function htmlRoute(file) {
+            let rel = slash(
+              path.relative(PUBLIC, file)
+            );
+
+            if (rel === "index.html") {
+              return "/";
+            }
+
+            if (rel.endsWith("/index.html")) {
+              return (
+                "/" +
+                rel.slice(
+                  0,
+                  -"index.html".length
+                )
+              );
+            }
+
+            if (rel.endsWith(".html")) {
+              return (
+                "/" +
+                rel.slice(0, -".html".length)
+              );
+            }
+
+            return "/" + rel;
+          }
+
+          const htmlFiles =
+            walk(PUBLIC).filter(
+              file =>
+                file.toLowerCase().endsWith(
+                  ".html"
+                )
+            );
+
+          /*
+           * Build a list of routes that actually exist.
+           */
+          const existing = new Set();
+
+          /*
+           * folderRoutes:
+           *
+           *   groups -> /algebra/groups/
+           */
+          const folderRoutes = new Map();
+
+          function addFolder(key, route) {
+            if (!folderRoutes.has(key)) {
+              folderRoutes.set(
+                key,
+                new Set()
+              );
+            }
+
+            folderRoutes
+              .get(key)
+              .add(route);
+          }
+
+          for (const file of htmlFiles) {
+            const route =
+              htmlRoute(file);
+
+            const lower =
+              route.toLowerCase();
+
+            existing.add(lower);
+
+            if (lower.endsWith("/")) {
+              existing.add(
+                lower.slice(0, -1) || "/"
+              );
+            }
+
+            if (
+              slash(
+                path.relative(PUBLIC, file)
+              ).endsWith("/index.html")
+            ) {
+              const pieces =
+                lower
+                  .split("/")
+                  .filter(Boolean);
+
+              if (pieces.length > 0) {
+                const name =
+                  pieces.at(-1);
+
+                /*
+                 * Lowercase route also collapses duplicate
+                 * uppercase/lowercase build outputs.
+                 */
+                addFolder(
+                  name,
+                  lower
+                );
+              }
+            }
+          }
+
+          /*
+           * Record ordinary Markdown filenames so the HTML
+           * repair does not steal links intended for normal
+           * notes.
+           */
+          const ordinaryNames =
+            new Set();
+
+          for (
+            const file of walk(CONTENT)
+              .filter(
+                f =>
+                  f.toLowerCase().endsWith(
+                    ".md"
+                  )
+              )
+          ) {
+            const base =
+              path.basename(
+                file,
+                path.extname(file)
+              );
+
+            const parent =
+              path.basename(
+                path.dirname(file)
+              );
+
+            const folderNote =
+              base.toLowerCase() ===
+                parent.toLowerCase() ||
+              base.toLowerCase() ===
+                "index";
+
+            if (!folderNote) {
+              ordinaryNames.add(
+                normalise(base)
+              );
+            }
+          }
+
+          const ORIGIN =
+            "https://quartz-build.invalid";
+
+          let repaired = 0;
+          const repairedExamples = [];
+
+          for (const file of htmlFiles) {
+            const pageRoute =
+              htmlRoute(file);
+
+            let html =
+              fs.readFileSync(file, "utf8");
+
+            let changed = false;
+
+            html = html.replace(
+              /href=(["'])([^"']+)\1/g,
+              (whole, quote, href) => {
+                /*
+                 * Ignore fragments, protocols and external
+                 * links.
+                 */
+                if (
+                  href.startsWith("#") ||
+                  href.startsWith("//") ||
+                  /^[a-z][a-z0-9+.-]*:/i.test(
+                    href
+                  )
+                ) {
+                  return whole;
+                }
+
+                let resolved;
+
+                try {
+                  resolved = new URL(
+                    href,
+                    ORIGIN + pageRoute
+                  );
+                } catch {
+                  return whole;
+                }
+
+                if (
+                  resolved.origin !== ORIGIN
+                ) {
+                  return whole;
+                }
+
+                const resolvedPath =
+                  normalise(
+                    resolved.pathname
+                  );
+
+                /*
+                 * If it already goes somewhere real,
+                 * leave it alone.
+                 */
+                if (
+                  existing.has(
+                    resolvedPath
+                  ) ||
+                  existing.has(
+                    resolvedPath + "/"
+                  )
+                ) {
+                  return whole;
+                }
+
+                const segments =
+                  resolvedPath
+                    .split("/")
+                    .filter(Boolean);
+
+                /*
+                 * The Quartz bug produces a bogus
+                 * root-level short path such as /groups.
+                 */
+                if (segments.length !== 1) {
+                  return whole;
+                }
+
+                const shortName =
+                  segments[0];
+
+                /*
+                 * Do not override normal note names.
+                 */
+                if (
+                  ordinaryNames.has(shortName)
+                ) {
+                  return whole;
+                }
+
+                const candidates =
+                  folderRoutes.get(shortName);
+
+                if (
+                  !candidates ||
+                  candidates.size !== 1
+                ) {
+                  return whole;
+                }
+
+                const destination =
+                  [...candidates][0];
+
+                const newHref =
+                  destination +
+                  resolved.search +
+                  resolved.hash;
+
+                changed = true;
+                repaired++;
+
+                if (
+                  repairedExamples.length < 40
+                ) {
+                  repairedExamples.push(
+                    `${slash(
+                      path.relative(
+                        PUBLIC,
+                        file
+                      )
+                    )}: ${href} -> ${newHref}`
+                  );
+                }
+
+                return (
+                  `href=${quote}` +
+                  newHref +
+                  quote
+                );
+              }
+            );
+
+            if (changed) {
+              fs.writeFileSync(
+                file,
+                html
+              );
+            }
+          }
+
+          console.log(
+            `Repaired ${repaired} generated HTML link(s).`
+          );
+
+          if (
+            repairedExamples.length > 0
+          ) {
+            console.log("");
+            console.log(
+              "Generated HTML repairs:"
+            );
+
+            for (
+              const item of repairedExamples
+            ) {
+              console.log(
+                "  " + item
+              );
+            }
+          }
+          EOF
+
+      # ---------------------------------------------------------
+      # VERIFY THE EXACT LINK THAT HAS BEEN FAILING
+      # ---------------------------------------------------------
 
       - name: Verify generated folder-note links
         run: |
           node <<'EOF'
           const fs = require("fs");
 
-          const file = "public/algebra/index.html";
+          const file =
+            "public/algebra/index.html";
 
           if (!fs.existsSync(file)) {
             throw new Error(
@@ -286,48 +802,81 @@ jobs:
           const html =
             fs.readFileSync(file, "utf8");
 
-          console.log(
-            "Checking generated Algebra page..."
-          );
-
-          const badLinks = [
+          const badPatterns = [
             'href="../groups"',
             'href="/groups"',
-            'href="groups"'
+            'href="groups"',
+            'href="../../groups"'
           ];
 
-          for (const bad of badLinks) {
+          for (const bad of badPatterns) {
             if (html.includes(bad)) {
               throw new Error(
-                `FAILED: generated Algebra page contains broken link ${bad}`
+                `FAILED: Algebra page still contains ${bad}`
               );
             }
           }
 
-          const correctPatterns = [
-            "../algebra/groups/",
-            "/algebra/groups/",
-            "algebra/groups/"
-          ];
+          /*
+           * Resolve every link whose visible text is
+           * "groups" and make sure at least one reaches
+           * /algebra/groups/.
+           */
+          const linkRegex =
+            /<a\b[^>]*href=(["'])([^"']+)\1[^>]*>([\s\S]*?)<\/a>/gi;
 
-          const foundCorrect =
-            correctPatterns.some(
-              (pattern) =>
-                html.includes(pattern)
-            );
+          let match;
+          let correct = false;
 
-          if (!foundCorrect) {
+          while (
+            (match = linkRegex.exec(html))
+          ) {
+            const href = match[2];
+
+            const text =
+              match[3]
+                .replace(/<[^>]+>/g, "")
+                .trim()
+                .toLowerCase();
+
+            if (text !== "groups") {
+              continue;
+            }
+
+            try {
+              const url = new URL(
+                href,
+                "https://example.invalid/algebra/"
+              );
+
+              const pathname =
+                url.pathname
+                  .replace(/\/+/g, "/")
+                  .toLowerCase();
+
+              if (
+                pathname ===
+                  "/algebra/groups/" ||
+                pathname ===
+                  "/algebra/groups"
+              ) {
+                correct = true;
+              }
+            } catch {}
+          }
+
+          if (!correct) {
             throw new Error(
-              "FAILED: generated Algebra page does not contain the correct algebra/groups link."
+              "FAILED: no working groups link to /algebra/groups/ was found."
             );
           }
 
           console.log(
-            "Generated [[groups]] link is correct."
+            "[[groups]] -> /algebra/groups/"
           );
 
           console.log(
-            "Folder-note HTML verification PASSED."
+            "Folder-note verification PASSED."
           );
           EOF
 
